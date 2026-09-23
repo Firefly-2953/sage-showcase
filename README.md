@@ -1,5 +1,5 @@
 <p align="center">
- Sage is a private repository. I'm happy to give a live demo or grant read-only access to anyone who's interested, just reach out at ejonofrio@gmail.com.
+  Sage is a private repository. I'm happy to give a live demo or grant read-only access to anyone who's interested—just reach out at ejonofrio@gmail.com.
 </p>
 
 <p align="center">
@@ -43,6 +43,7 @@ Sage learns gradually. It observes repeated decisions, presents understandable s
 | **Adaptive actions** | Opt-in quick-action personalization based on strong, independent evidence |
 | **Activity** | Human-readable action history with durable, relationship-aware Undo |
 | **Accounts and Settings** | Separate Google identity and Gmail consent, synchronized preferences, and conservative account isolation |
+| **Sample mode** | A deterministic, write-free product demonstration across Sage’s primary surfaces without mixing with real account data |
 
 ## Learning without losing control
 
@@ -71,6 +72,8 @@ When Sage offers a shortcut, it names the exact effect:
 - **Handle · Label: Receipts**
 
 Each message must still pass current evidence, policy, ownership, classification, and protection checks. Conflicting or uncertain situations cause Sage to abstain.
+
+Broader Learning V3 work remains authority-free research. It cannot mutate Gmail, publish product recommendations, or become persistent user knowledge.
 
 ## Gmail experience
 
@@ -121,22 +124,27 @@ Core architectural boundaries:
 - Account and session ownership are revalidated across asynchronous work.
 - Suggestions, remembered knowledge, Handled shortcuts, and Gmail automation represent separate levels of authority.
 - No LLM determines whether a Gmail mutation is authorized.
+- The production container contains only the compiled frontend and static Nginx runtime; Gmail and Supabase remain externally managed services.
 
 ## Technology
 
 - React 19
-- TypeScript
-- Vite
-- React Router
-- Supabase Auth, Postgres, Row Level Security, and Edge Functions
+- TypeScript 6
+- Vite 8
+- React Router 7
+- Supabase Auth, PostgreSQL, Row Level Security, and Edge Functions
 - Google Identity Services
 - Gmail API
+- Docker and Docker Compose
+- Unprivileged Nginx runtime
+- GitHub Actions CI
+- Trivy runtime vulnerability scanning
+- Dependabot
 - Lucide icons
 - Plain CSS
 - Node’s native test runner
 - PGlite migration and persistence-contract testing
 - Chrome DevTools Protocol for mounted browser and accessibility tests
-- GitHub Actions
 
 ## Trust and privacy
 
@@ -147,14 +155,15 @@ Sage is designed to avoid becoming a competing email database.
 - Browser roles cannot read server credential tables.
 - Raw Gmail API responses are not persisted.
 - Message bodies, snippets, attachments, recipient fields, and full headers are not stored in Sage’s persistence layer.
-- Activity and learning records may retain limited sender, subject, action, and relationship metadata when required for explanation and Undo.
+- Activity and learning records retain only the limited metadata required for explanation, lifecycle tracking, and Undo.
 - Gmail filters are created only after explicit review and approval.
 - Sage does not silently adopt or delete externally managed Gmail filters.
 - Autonomous background Gmail actions remain outside the current product scope.
+- Rich sample mode is synthetic, session-isolated, and unable to write to Gmail, Supabase, canonical Activity, Learning, or persistence.
 
 ## Quality
 
-Sage has more than **1,900 automated tests** covering:
+Sage has more than **3,000 automated tests** covering:
 
 - Gmail actions and synchronization
 - Authentication and account isolation
@@ -167,8 +176,11 @@ Sage has more than **1,900 automated tests** covering:
 - Dialog containment and focus restoration
 - Mounted Chrome behavior
 - Migration and security contracts
+- Sample-data isolation
+- Production-build exclusions
+- Docker routing, health, caching, and cleanup contracts
 
-The GitHub Actions workflow runs the project on Node 24 and checks:
+The GitHub Actions CI workflow runs the project on Node 24 and verifies:
 
 ```bash
 npm ci
@@ -177,13 +189,28 @@ npm run build
 npm test
 ```
 
+It also:
+
+- Builds the production Docker image
+- Smoke-tests every current application route
+- Verifies SPA fallback and static-resource 404 behavior
+- Checks cache and security headers
+- Confirms non-root execution
+- Exercises health failure and recovery
+- Tests container and network cleanup paths
+- Scans the final runtime image with Trivy for fixable High and Critical OS vulnerabilities
+
+The Docker bases, security scanner, and GitHub Actions are pinned to immutable digests or commit SHAs and updated through Dependabot.
+
 ## Current status
 
-Sage V1 and its first Learning V2 milestones have completed bounded automated and authenticated acceptance in a personal/test-account environment.
+Sage V1 and Learning V2 have completed bounded automated and authenticated acceptance in a personal/test-account environment.
 
-The application is under active development and has not yet been prepared for broad public distribution. Public launch work will require production-origin configuration, OAuth verification, privacy and terms review, monitoring, and an intentional rollout plan.
+Current production behavior includes explicit Handled shortcuts for Archive, Mark read, and applying an existing label, plus opt-in adaptive quick actions. These features remain user-initiated and use Sage’s shared Gmail action, Activity, and durable Undo systems.
 
-Current development is focused on letting users explicitly choose which single Handled shortcut Sage should offer when multiple strongly supported habits apply to the same sender and category.
+Learning V3 remains authority-free shadow research rather than a shipped user feature. Current development is focused on production polish, responsive screenshot readiness, broader learning research, and preparation for an intentional public rollout.
+
+The application has not yet been prepared for broad public distribution. Public launch work will require production-origin configuration, OAuth verification, privacy and terms review, monitoring, and a controlled rollout plan.
 
 ## Run locally
 
@@ -194,10 +221,10 @@ Current development is focused on letting users explicitly choose which single H
 - A Google OAuth web client
 - A Supabase project for authentication, persistence, and server-side Gmail access
 
-Install dependencies:
+Install the locked dependencies:
 
 ```bash
-npm install
+npm ci
 ```
 
 Create the local environment file:
@@ -226,7 +253,60 @@ Vite serves the application at:
 http://localhost:5173
 ```
 
-Never place a Google client secret, Supabase service-role key, Gmail token, or another private credential in a `VITE_` variable.
+Never place a Google client secret, Supabase service-role key, Gmail token, encryption key, or another private credential in a `VITE_` variable.
+
+## Run with Docker
+
+Sage uses a digest-pinned, multi-stage Docker build. Node 24 compiles the React application, and only the resulting static files enter the small, unprivileged Nginx runtime.
+
+Run:
+
+```bash
+docker compose --env-file .env.local up --build
+```
+
+Open [http://localhost:5173](http://localhost:5173).
+
+Stop and remove the local container and network with:
+
+```bash
+docker compose down
+```
+
+The host port intentionally remains `5173`. Add `http://localhost:5173` to the Google OAuth client’s **Authorized JavaScript origins** and the Edge Function `SAGE_APP_ORIGINS` allowlist.
+
+Gmail’s OAuth callback remains the deployed Supabase Edge Function URL. It is not handled by the static frontend container.
+
+Compose supplies these public browser values as build-time inputs:
+
+- `VITE_GOOGLE_CLIENT_ID`
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+Vite compiles them into the frontend bundle; they are not runtime secrets. `.env.local` is excluded from the Docker build context.
+
+The final image:
+
+- Runs as UID/GID `101:101`
+- Contains only the compiled frontend and Nginx runtime
+- Provides `/healthz`
+- Supports direct navigation and refresh across Sage routes
+- Uses immutable caching for successful fingerprinted assets
+- Returns real, uncached `404` responses for missing static files
+- Adds baseline content-type, referrer, and anti-framing headers
+- Excludes source, tests, vault documents, development tools, credentials, backend files, private Learning V3 bridges, diagnostics, and acceptance fixtures
+
+It does not containerize Gmail, Supabase, PostgreSQL, migrations, or Edge Functions.
+
+Useful checks:
+
+```bash
+curl --fail http://localhost:5173/healthz
+docker compose ps
+docker compose logs web
+```
+
+If sign-in is rejected, verify the exact `http://localhost:5173` origin in both Google and `SAGE_APP_ORIGINS`, then rebuild after changing any `VITE_` value.
 
 ## Google and Supabase setup
 
@@ -282,13 +362,17 @@ Sage maintains a durable project knowledge vault alongside the implementation:
 - [Architecture](docs/Sage/03%20-%20Architecture.md)
 - [Bugs and lessons](docs/Sage/04%20-%20Bugs%20and%20Lessons.md)
 - [Backlog](docs/Sage/05%20-%20Backlog.md)
+- [Tab audits](docs/Sage/06%20-%20Tab%20Audits.md)
 - [V1 release acceptance](docs/Sage/08%20-%20V1%20Release%20Acceptance.md)
+- [Learning V2 acceptance](docs/Sage/09%20-%20Learning%20V2%20Acceptance.md)
+- [Learning V3 research](docs/Sage/10%20-%20Learning%20V3%20Research.md)
 
 ## Roadmap
 
 Future directions include:
 
-- Richer preference management and additional Handled actions
+- Additional Handled actions
+- Broader explainable learning patterns
 - AI-assisted summaries and semantic importance
 - Action-item and calendar extraction
 - Package intelligence
