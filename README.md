@@ -298,4 +298,6 @@ Future directions include:
 
 Every addition should make Sage feel calmer, smarter, or more trustworthy.
 
-<img width="1452" height="685" alt="Screenshot 2026-09-19 at 6 07 56 PM" src="https://github.com/user-attachments/assets/e201abec-1878-4cc4-9b73-99c4ea884f80" />
+## Home Page
+<img width="1450" height="681" alt="Screenshot 2026-09-23 at 9 39 25 AM" src="https://github.com/user-attachments/assets/28bd12a9-9f65-4ee2-9d0c-ca3636823433" />
+
