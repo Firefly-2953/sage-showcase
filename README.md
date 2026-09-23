@@ -297,3 +297,5 @@ Future directions include:
 - Unified multi-account inboxes
 
 Every addition should make Sage feel calmer, smarter, or more trustworthy.
+
+<img width="1452" height="685" alt="Screenshot 2026-09-19 at 6 07 56 PM" src="https://github.com/user-attachments/assets/e201abec-1878-4cc4-9b73-99c4ea884f80" />
